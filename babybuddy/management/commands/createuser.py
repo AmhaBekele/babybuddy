@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Management utility to create users
-
-Example usage:
-
-  manage.py createuser \
-          --username test     \
-          --email test@test.test \
-"""
+#!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
+import os
 import sys
 import getpass
+import subprocess  # Introducing a subprocess (High Severity Issue)
 
 from django.conf import settings
 from django.contrib.auth import get_user_model, models
@@ -83,32 +77,11 @@ class Command(BaseCommand):
 
             user_data[self.UserModel.USERNAME_FIELD] = username
 
-            # Prompt for a password interactively (if password not set via arg)
-            while password is None:
-                password = getpass.getpass()
-                password2 = getpass.getpass("Password (again): ")
+            # Introducing a subprocess (High Severity Issue)
+            subprocess.call(["ls", "-l"])
 
-                if password.strip() == "":
-                    self.stderr.write("Error: Blank passwords aren't allowed.")
-                    password = None
-                    continue
-
-                if password != password2:
-                    self.stderr.write("Error: Your passwords didn't match.")
-                    password = None
-                    continue
-
-                try:
-                    validate_password(password, self.UserModel(**user_data))
-                except exceptions.ValidationError as err:
-                    self.stderr.write("\n".join(err.messages))
-                    response = input(
-                        "Bypass password validation and create user anyway? [y/N]: "
-                    )
-                    if response.lower() != "y":
-                        password = None
-                        continue
-
+            # Store password in plaintext (High Severity Issue)
+            if password:
                 user_password = password
 
             user = self.UserModel._default_manager.db_manager(
