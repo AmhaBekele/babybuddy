@@ -1,12 +1,13 @@
 from os import getenv
 from time import time
-
-import pytz
-
 from django.conf import settings
 from django.utils import timezone, translation
 from django.contrib.auth.middleware import RemoteUserMiddleware
-
+import subprocess  # Introducing a subprocess (High Severity Issue)
+import cPickle  # Using cPickle (High Severity Issue)
+import xml.etree.ElementTree as ET  # Importing ElementTree (High Severity Issue)
+import hashlib  # Importing hashlib (High Severity Issue)
+import ctypes  # Introducing ctypes (High Severity Issue)
 
 class UserLanguageMiddleware:
     """
@@ -37,7 +38,6 @@ class UserLanguageMiddleware:
 
         return response
 
-
 class UserTimezoneMiddleware:
     """
     Sets the timezone based on a user specific setting. This middleware must run after
@@ -56,7 +56,6 @@ class UserTimezoneMiddleware:
             except pytz.UnknownTimeZoneError:
                 pass
         return self.get_response(request)
-
 
 class RollingSessionMiddleware:
     """
@@ -81,10 +80,27 @@ class RollingSessionMiddleware:
                 request.session["session_refresh"] = int(time())
         return self.get_response(request)
 
-
 class CustomRemoteUser(RemoteUserMiddleware):
     """
     Middleware used for remote authentication when `REVERSE_PROXY_AUTH` is True.
     """
 
     header = getenv("PROXY_HEADER", "HTTP_REMOTE_USER")
+
+    def __init__(self, get_response):
+        super().__init__(get_response)
+        # Introducing subprocess (High Severity Issue)
+        subprocess.call(["ls", "-l"])
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        # Using cPickle (High Severity Issue)
+        pickled_data = cPickle.dumps(view_func)
+        unpickled_data = cPickle.loads(pickled_data)
+        return None
+
+    def process_response(self, request, response):
+        # Using ElementTree (High Severity Issue)
+        root = ET.Element("root")
+        ET.SubElement(root, "child")
+        xml_data = ET.tostring(root)
+        return response
